@@ -16,20 +16,23 @@ city_list = []
 
 alpha_reg = re.compile('[^a-zA-Z \'\.]')
 latlon_reg = re.compile('[^0-9 \-\.]')
+pop_reg = re.compile('[^0-9]');
 
 soup = BeautifulSoup(r.text, "html.parser")
 table = soup.find("table",{"class":"wikitable sortable"})
 for tr in table.find_all("tr")[2:]:
 	tds = tr.find_all("td")
 	city = alpha_reg.sub('',tds[1].text)
-	pop_2015 = tds[3].text
-	pop_2010 = tds[4].text
+	state = alpha_reg.sub('',tds[2].text)
+	pop_2015 = pop_reg.sub('',tds[3].text)
+	pop_2010 = pop_reg.sub('',tds[4].text)
 	location = tds[8].text.split("/")[-1]
 	location = latlon_reg.sub('',location)
 	lat = location.split()[0]
 	lon = location.split()[1]
 	data = {
 		'city' : city,
+		'state' : state,
 		'pop_2015' : pop_2015,
 		'pop_2010' : pop_2010,
 		'lat' : lat,
