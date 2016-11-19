@@ -1,4 +1,4 @@
-import requests, re
+import requests, re, json
 from bs4 import BeautifulSoup
 from datetime import datetime
 from string import ascii_lowercase
@@ -12,8 +12,7 @@ if r.status_code != 200:
 	print(r.status_code)
 	sys.exit(1)
 
-fout = open("populations.csv","w")
-fout.write("city, pop_2015, pop_2010, lat, lon\n")
+city_list = []
 
 alpha_reg = re.compile('[^a-zA-Z \'\.]')
 latlon_reg = re.compile('[^0-9 \-\.]')
@@ -29,6 +28,14 @@ for tr in table.find_all("tr")[2:]:
 	location = latlon_reg.sub('',location)
 	lat = location.split()[0]
 	lon = location.split()[1]
-	fout.write("{},{},{},{},{}\n".format(city,pop_2015,pop_2010,lat,lon))
+	data = {
+		'city' : city,
+		'pop_2015' : pop_2015,
+		'pop_2010' : pop_2010,
+		'lat' : lat,
+		'lon' : lon
+	}
+	city_list.append(data)
 
-fout.close()
+with open('populations.json', 'w') as fout:
+	fout.write(json.dumps(city_list, fout, indent=4, sort_keys=True, separators=(',', ':')))
