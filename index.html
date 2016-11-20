@@ -17,27 +17,62 @@
 		<link rel="stylesheet" href="css/bootstrap.min.css">
 		<script src="js/jquery-3.1.1.min.js"></script>
 		<script src="js/bootstrap.min.js"></script>
+		<script src="js/bootstrap-checkbox.min.js"></script>
     </head>
     <body>
-        <div id="map"></div>
+		<div class="container">
+			<div class="row">
+				<div class="col-md-12">
+					<div class="panel panel-default">
+						<div class="panel-heading">
+							<input type="checkbox" id="popToggle">
+						</div>
+						<div class="panel-body">
+							<div id="map" style="width:1000px; height:600px;"></div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+
         <script>
+			$("#popToggle").checkboxpicker({
+				offLabel: "Growth (2010-2015)",
+				onLabel: "2015 Population"
+			});
+			$("#popToggle").change(function(){
+				var byPop = $("#popToggle").prop("checked");
+				for(var i = 0; i < cities.length; i++){
+					var icon = byPop ? getPopMarker(cities[i]) : getPercMarker(cities[i]);
+					cities[i].marker.setIcon(icon);
+				}
+			});
+			$("#test").click(function(){
+				for(var i = 0; i < cities.length; i++){
+					var icon = getPopMarker(cities[i]);
+					cities[i].marker.setIcon(icon);
+				}
+			});
+			
 			var map;
 			var cities;
+			var maxPop;
+			var minPop;
+			var popRange;
 			var currentInfoWindow = null;
 			function initMap() {
 				map = new google.maps.Map(document.getElementById('map'), {
-					zoom: 5,
+					zoom: 4,
 					center: {lat: 39.8282, lng: -98.5795},
 					mapTypeId: 'satellite'
 				});
 
-				function reqListener () {
-				  console.log(this.responseText);
-				}
-
-				var oReq = new XMLHttpRequest(); //New request object
+				var oReq = new XMLHttpRequest();
 				oReq.onload = function() {
 					cities = JSON.parse(this.responseText);
+					maxPop = Math.max.apply(Math,cities.map(function(city){return city.pop_2015;}));
+					minPop = Math.min.apply(Math,cities.map(function(city){return city.pop_2015;}));
+					popRange = maxPop - minPop;
 					cities.forEach(addMarker);
 				};
 				oReq.open("get", "get-pops.php", true);
@@ -52,9 +87,10 @@
 				city.percChange = (popChange / parseFloat(city.pop_2010)) * 100;
 				var marker = new google.maps.Marker({
 					position: new google.maps.LatLng(city.lat,city.lon),
-					icon: getPercMarker(city.percChange),
+					icon: getPercMarker(city),
 					map: map
 				});
+				city.marker = marker;
 
 				var info = getCityInfo(city);
 				var infoWindow = new google.maps.InfoWindow({
@@ -87,13 +123,13 @@
 				});
 			}
 
-			function getPercMarker(percChange) {
-				if(percChange > 0){
+			function getPercMarker(city) {
+				if(city.percChange > 0){
 					return {
 						path: google.maps.SymbolPath.CIRCLE,
 						fillColor: 'blue',
 						fillOpacity: .3,
-						scale: Math.log(percChange) * 5,
+						scale: Math.log(city.percChange) * 5,
 						strokeColor: 'white',
 						strokeWeight: .5
 					};
@@ -103,19 +139,20 @@
 						path: google.maps.SymbolPath.CIRCLE,
 						fillColor: 'red',
 						fillOpacity: .3,
-						scale: Math.log(-1*percChange) * 5,
+						scale: Math.log(-1*city.percChange) * 5,
 						strokeColor: 'white',
 						strokeWeight: .5
 					};
 				}
 			}
 			
-			function getPopMarker(population) {
+			function getPopMarker(city) {
+				var tmp = city.pop_2015 / 100000;
 				return {
 					path: google.maps.SymbolPath.CIRCLE,
 					fillColor: 'blue',
 					fillOpacity: .3,
-					scale: Math.log(population / 1000.0) * 5,
+					scale: Math.log2(tmp)*5,
 					strokeColor: 'white',
 					strokeWeight: .5
 				};
