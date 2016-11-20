@@ -43,8 +43,13 @@
 			$("#popToggle").change(function(){
 				var byPop = $("#popToggle").prop("checked");
 				for(var i = 0; i < cities.length; i++){
-					var icon = byPop ? getPopMarker(cities[i]) : getPercMarker(cities[i]);
-					cities[i].marker.setIcon(icon);
+					try{
+						var icon = byPop ? getPopMarker(cities[i]) : getPercMarker(cities[i]);
+						cities[i].marker.setIcon(icon);
+					}
+					catch(err){
+						console.log(err);
+					}
 				}
 			});
 			$("#test").click(function(){
@@ -148,6 +153,9 @@
 			
 			function getPopMarker(city) {
 				var tmp = city.pop_2015 / 100000;
+				if(tmp < 2){
+					tmp *= 2;
+				}
 				return {
 					path: google.maps.SymbolPath.CIRCLE,
 					fillColor: 'blue',
