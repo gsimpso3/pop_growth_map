@@ -14,11 +14,15 @@
                 padding: 0;
             }
         </style>
+		<link rel="stylesheet" href="css/bootstrap.min.css">
+		<script src="js/jquery-3.1.1.min.js"></script>
+		<script src="js/bootstrap.min.js"></script>
     </head>
     <body>
         <div id="map"></div>
         <script>
 			var map;
+			var cities;
 			var currentInfoWindow = null;
 			function initMap() {
 				map = new google.maps.Map(document.getElementById('map'), {
@@ -31,7 +35,6 @@
 				  console.log(this.responseText);
 				}
 
-				var cities;
 				var oReq = new XMLHttpRequest(); //New request object
 				oReq.onload = function() {
 					cities = JSON.parse(this.responseText);
@@ -46,10 +49,10 @@
 					return;
 				}
 				var popChange = parseInt(city.pop_2015) - parseInt(city.pop_2010);
-				var percChange = (popChange / parseFloat(city.pop_2010)) * 100;
+				city.percChange = (popChange / parseFloat(city.pop_2010)) * 100;
 				var marker = new google.maps.Marker({
 					position: new google.maps.LatLng(city.lat,city.lon),
-					icon: getCircle(percChange),
+					icon: getPercMarker(city.percChange),
 					map: map
 				});
 
@@ -76,9 +79,15 @@
 					infoWindow.open(map,marker);
 					currentInfoWindow = infoWindow;
 				});
+				
+				map.addListener('click',function(){
+					if(currentInfoWindow != null){
+						currentInfoWindow.close();
+					}
+				});
 			}
 
-			function getCircle(percChange) {
+			function getPercMarker(percChange) {
 				if(percChange > 0){
 					return {
 						path: google.maps.SymbolPath.CIRCLE,
@@ -100,11 +109,24 @@
 					};
 				}
 			}
+			
+			function getPopMarker(population) {
+				return {
+					path: google.maps.SymbolPath.CIRCLE,
+					fillColor: 'blue',
+					fillOpacity: .3,
+					scale: Math.log(population / 1000.0) * 5,
+					strokeColor: 'white',
+					strokeWeight: .5
+				};
+			}
 
 			function getCityInfo(city){
 				var content = "<h3>" + city.city + ", " + city.state + "</h3>";
 				content += "2015 population (estimate): " + city.pop_2015 + "<br>";
-				content += " 2010 population: " + city.pop_2010 + "<br>";
+				content += "2010 population: " + city.pop_2010 + "<br>";
+				content += "% change: " + city.percChange.toFixed(2) + "<br>";
+
 				return content;
 			}
 

@@ -1,4 +1,12 @@
 [
+	{
+		"city":"New York",
+		"lat":"40.6643",
+		"lon":"-73.9385",
+		"pop_2010":"8175133",
+		"pop_2015":"8550405",
+		"state":"New York"
+	},
     {
         "city":"Los Angeles",
         "lat":"34.0194",
